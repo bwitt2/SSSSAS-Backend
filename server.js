@@ -28,10 +28,27 @@ var studentsSchema = mongoose.Schema(
         firstName: String,
         lastName: String,
         DOB: Date,
-        resInfo: {type: mongoose.Schema.ObjectId, ref: 'ResidencyModel'}
+        residency: {type: mongoose.Schema.ObjectId, ref: 'ResidencyModel'},
+        gender: {type: mongoose.Schema.ObjectId, ref: 'GenderModel'},
+        academicLoad: {type: mongoose.Schema.ObjectId, ref: 'AcademicLoadModel'}
     }
 );
+
 var residencySchema = mongoose.Schema(
+    {
+        name: String,
+        students: [{type: mongoose.Schema.ObjectId, ref: ('StudentsModel')}]
+    }
+);
+
+var genderSchema = mongoose.Schema(
+    {
+        name: String,
+        students: [{type: mongoose.Schema.ObjectId, ref: ('StudentsModel')}]
+    }
+); 
+
+var academicLoadSchema = mongoose.Schema(
     {
         name: String,
         students: [{type: mongoose.Schema.ObjectId, ref: ('StudentsModel')}]
@@ -40,6 +57,9 @@ var residencySchema = mongoose.Schema(
 
 var StudentsModel = mongoose.model('student', studentsSchema);
 var ResidencyModel = mongoose.model('residency', residencySchema);
+var GenderModel = mongoose.model('gender', genderSchema);
+var AcademicLoadModel = mongoose.model('academicLoad', academicLoadSchema);
+
 
 app.route('/students')
     .post(function (request, response) {
@@ -159,6 +179,54 @@ app.route('/residencies/:residency_id')
             }
         })
     });
+
+app.route('/genders')
+    .post(function (request, response) {
+        var gender = new GenderModel(request.body.gender);
+        gender.save(function (error) {
+            if (error) response.send(error);
+            response.json({gender: gender});
+        });
+    })
+    .get(function (request, response) {
+        var Student = request.query.filter;
+        if (!Student) {
+            GenderModel.find(function (error, genders) {
+                if (error) response.send(error);
+                response.json({gender: genders});
+            });
+        } else {
+            PermissionTypeModel.find({"student": Student.student}, function (error, students) {
+                if (error) response.send(error);
+                response.json({gender: students});
+            });
+        }
+    });
+
+app.route('/academicloads')
+    .post(function (request, response) {
+        var academicLoad = new AcademicLoadModel(request.body.academicLoad);
+        academicLoad.save(function (error) {
+            if (error) response.send(error);
+            response.json({academicLoad: academicLoad});
+        });
+    })
+    .get(function (request, response) {
+        var Student = request.query.filter;
+        if (!Student) {
+            AcademicLoadModel.find(function (error, academicLoads) {
+                if (error) response.send(error);
+                response.json({academicLoad: academicLoads});
+            });
+        } else {
+            PermissionTypeModel.find({"student": Student.student}, function (error, students) {
+                if (error) response.send(error);
+                response.json({academicLoad: students});
+            });
+        }
+    });
+
+
 
 
 app.listen(7700, function () {
